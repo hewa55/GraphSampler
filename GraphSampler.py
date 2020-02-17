@@ -8,6 +8,7 @@ import networkx as nx
 class GraphSample:
 
     def list_sampling(self, graph, target_size, V2=False):
+        # reference paper: https://content.iospress.com/articles/intelligent-data-analysis/ida163319
 
         sampled_nodes = [choice(list(graph.nodes))]
         sampled_edges = list()
@@ -61,7 +62,10 @@ class GraphSample:
         sampled_nodes = []
         sampled_edges = list()
         epsilon = list()
-
+        # the novelty of this algorithm the the choice of C - the rest has been covered, see reference paper
+        # http://pike.psu.edu/classes/ku/latest/ref/random-walk-vldb-2000.pdf
+        # and
+        # https://ieeexplore.ieee.org/document/7113345
         while (len(set(sampled_nodes)) < target_size * len(graph.nodes)):
             epsilon.append(np.random.geometric(graph.degree[current_node] /
                                                max([graph.degree[current_node], C])))
@@ -77,6 +81,7 @@ class GraphSample:
         return sampled_nodes, sampled_edges
 
     def rcmhrw(self, graph, target_size, alpha=0):
+        # reference paper: https://ieeexplore.ieee.org/document/7113345
         current_node = np.random.choice(a=list(graph), size=1)[0]
         sampled_nodes = []
         sampled_edges = list()
