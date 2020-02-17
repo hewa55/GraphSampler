@@ -55,11 +55,53 @@ class GraphSample:
 
         return sampled_nodes, sampled_edges
 
-    def sample(self, graph, method,n):
+    def gmd(self, graph, target_size, C, return_epsilon=True):
+        current_node = np.random.choice(a=list(graph), size=1)[0]
+        i = 1
+        sampled_nodes = []
+        sampled_edges = list()
+        epsilon = list()
+
+        while (len(set(sampled_nodes)) < target_size * len(graph.nodes)):
+            epsilon.append(np.random.geometric(graph.degree[current_node] /
+                                               max([graph.degree[current_node], C])))
+            v = np.random.choice(a=[n for n in graph[current_node]], size=1)[0]
+
+            sampled_nodes.append(current_node)
+            sampled_edges.append((current_node, v))
+
+            current_node = v
+            i += 1
+        if (return_epsilon):
+            return sampled_nodes, sampled_edges, epsilon
+        return sampled_nodes, sampled_edges
+
+    def rcmhrw(self, graph, target_size, alpha=0):
+        current_node = np.random.choice(a=list(graph), size=1)[0]
+        sampled_nodes = []
+        sampled_edges = list()
+
+        while (len(sampled_nodes) < target_size * len(graph.nodes)):
+            v = np.random.choice([n for n in graph[current_node]], size=1)[0]
+            q = np.random.uniform(0, 1, size=1)
+            if (q <= (graph.degree(current_node) / graph.degree(v)) ** alpha):
+                if (current_node not in sampled_nodes):
+                    sampled_nodes.append(current_node)
+                if ((current_node, v) not in sampled_edges):
+                    sampled_edges.append((current_node, v))
+                current_node = v
+
+        return sampled_nodes, sampled_edges
+
+    def sample(self, graph, method,n, C=0,return_epsilon = True, alpha = 0):
         if(method == "list1"):
             return self.list_sampling(graph,target_size=n,V2=False)
         if(method == "list2"):
             return self.list_sampling(graph,target_size=n,V2=True)
-
+        if(method == "gmd"):
+            return self.gmd(graph,target_size=n,C=C, return_epsilon=True)
+        if(method == "rcmh"):
+            return self.rcmhrw(graph,target_size=n,alpha=alpha)
+        raise ValueError
 
 
