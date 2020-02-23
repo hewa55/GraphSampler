@@ -62,19 +62,19 @@ class GraphSample:
         sampled_nodes = []
         sampled_edges = list()
         epsilon = list()
+        size_graph =len(graph.nodes)
         # the novelty of this algorithm the the choice of C - the rest has been covered, see reference paper
         # http://pike.psu.edu/classes/ku/latest/ref/random-walk-vldb-2000.pdf
         # and
         # https://ieeexplore.ieee.org/document/7113345
-        while (len(set(sampled_nodes)) < target_size * len(graph.nodes)):
+        while (len(sampled_nodes) < target_size * size_graph):
+
             v = np.random.choice(a=[n for n in graph[current_node]], size=1)[0]
 
-            if(current_node not in sampled_nodes):
-                epsilon.append(np.random.geometric(graph.degree[current_node] /
+            epsilon.append(np.random.geometric(graph.degree[current_node] /
                                                max([graph.degree[current_node], C])))
-                sampled_nodes.append(current_node)
-            if((current_node,v) not in sampled_edges):
-                sampled_edges.append((current_node, v))
+            sampled_nodes.append(current_node)
+            sampled_edges.append((current_node, v))
 
             current_node = v
             i += 1
@@ -92,23 +92,29 @@ class GraphSample:
             v = np.random.choice([n for n in graph[current_node]], size=1)[0]
             q = np.random.uniform(0, 1, size=1)
             if (q <= (graph.degree(current_node) / graph.degree(v)) ** alpha):
-                if (current_node not in sampled_nodes):
-                    sampled_nodes.append(current_node)
-                if ((current_node, v) not in sampled_edges):
-                    sampled_edges.append((current_node, v))
+                sampled_nodes.append(current_node)
+                sampled_edges.append((current_node, v))
                 current_node = v
 
         return sampled_nodes, sampled_edges
 
 
     def avg_clustering_rcmh(self, graph, nodes, alpha):
-        c = [x for x in nx.algorithms.clustering(graph, nodes=nodes).values()]
-        deg = [x[1] for x in nx.degree(graph, nodes)]
-        return sum(np.multiply(c, np.power(deg, (alpha - 1)))) / sum(np.power(deg, (alpha - 1)))
+        top = 0
+        bottom = 0
+        for x in nodes:
+            c = nx.algorithms.clustering(graph, nodes=x)
+            deg = nx.degree(graph, x)
+            top += c * deg ** (alpha - 1)
+            bottom += deg ** (alpha - 1)
+        return top/bottom
 
     def avg_clustering_gmd(self, graph, nodes, eps, C):
-        c = [x for x in nx.algorithms.clustering(graph, nodes=nodes).values()]
-        deg = [x[1] for x in nx.degree(graph, nodes)]
-        top = sum(np.divide(np.multiply(c, eps), np.maximum(deg, C)))
-        bottom = sum(np.divide(eps, np.maximum(deg, C)))
-        return top / bottom
+        top = 0
+        bottom = 0
+        for x in range(len(nodes)):
+            c = nx.algorithms.clustering(graph, nodes=nodes[x])
+            deg = nx.degree(graph, nodes[x])
+            top += c * eps[x] / np.maximum(deg, C)
+            bottom += eps[x] / np.maximum(deg, C)
+        return top/bottom
