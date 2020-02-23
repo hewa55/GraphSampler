@@ -67,12 +67,14 @@ class GraphSample:
         # and
         # https://ieeexplore.ieee.org/document/7113345
         while (len(set(sampled_nodes)) < target_size * len(graph.nodes)):
-            epsilon.append(np.random.geometric(graph.degree[current_node] /
-                                               max([graph.degree[current_node], C])))
             v = np.random.choice(a=[n for n in graph[current_node]], size=1)[0]
 
-            sampled_nodes.append(current_node)
-            sampled_edges.append((current_node, v))
+            if(current_node not in sampled_nodes):
+                epsilon.append(np.random.geometric(graph.degree[current_node] /
+                                               max([graph.degree[current_node], C])))
+                sampled_nodes.append(current_node)
+            if((current_node,v) not in sampled_edges):
+                sampled_edges.append((current_node, v))
 
             current_node = v
             i += 1
@@ -98,15 +100,15 @@ class GraphSample:
 
         return sampled_nodes, sampled_edges
 
-    def sample(self, graph, method,n, C=0,return_epsilon = True, alpha = 0):
-        if(method == "list1"):
-            return self.list_sampling(graph,target_size=n,V2=False)
-        if(method == "list2"):
-            return self.list_sampling(graph,target_size=n,V2=True)
-        if(method == "gmd"):
-            return self.gmd(graph,target_size=n,C=C, return_epsilon=True)
-        if(method == "rcmh"):
-            return self.rcmhrw(graph,target_size=n,alpha=alpha)
-        raise ValueError
 
+    def avg_clustering_rcmh(self, graph, nodes, alpha):
+        c = [x for x in nx.algorithms.clustering(graph, nodes=nodes).values()]
+        deg = [x[1] for x in nx.degree(graph, nodes)]
+        return sum(np.multiply(c, np.power(deg, (alpha - 1)))) / sum(np.power(deg, (alpha - 1)))
 
+    def avg_clustering_gmd(self, graph, nodes, eps, C):
+        c = [x for x in nx.algorithms.clustering(graph, nodes=nodes).values()]
+        deg = [x[1] for x in nx.degree(graph, nodes)]
+        top = sum(np.divide(np.multiply(c, eps), np.maximum(deg, C)))
+        bottom = sum(np.divide(eps, np.maximum(deg, C)))
+        return top / bottom
