@@ -100,6 +100,8 @@ class GraphSample:
 
 
     def avg_clustering_rcmh(self, graph, nodes, alpha):
+        # produces the average clustering for all nodes, given level = alpha
+        # returns adjusted average clustering
         top = 0
         bottom = 0
         for x in nodes:
@@ -110,6 +112,8 @@ class GraphSample:
         return top/bottom
 
     def avg_clustering_gmd(self, graph, nodes, eps, C):
+        # produces the average clustering for all nodes, given level = C and geometric solutions = eps
+        # returns adjusted average clustering
         top = 0
         bottom = 0
         for x in range(len(nodes)):
